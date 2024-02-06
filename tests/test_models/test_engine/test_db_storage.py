@@ -68,21 +68,58 @@ test_db_storage.py'])
                             "{:s} method needs a docstring".format(func[0]))
 
 
+@unittest.skipIf(models.storage_t != 'db', "not testing db storage")
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
-    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_returns_dict(self):
         """Test that all returns a dictionaty"""
         self.assertIs(type(models.storage.all()), dict)
 
-    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_no_class(self):
         """Test that all returns all rows when no class is passed"""
 
-    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_new(self):
         """test that new adds an object to the database"""
 
-    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_save(self):
         """Test that save properly saves objects to file.json"""
+
+    def test_get(self):
+        """testing that is to get the returns an object that's of aa
+        of the given class by the id."""
+        storagee = models.storage
+        objj = State(name='Michigan')
+        objj.save()
+        self.assertEqual(objj.id, storagee.get(State, objj.id).id)
+        self.assertEqual(objj.name, storagee.get(State, objj.id).name)
+        self.assertIsNot(objj, storagee.get(State, objj.id + 'op'))
+        self.assertIsNone(storagee.get(State, objj.id + 'op'))
+        self.assertIsNone(storagee.get(State, 45))
+        self.assertIsNone(storagee.get(None, objj.id))
+        self.assertIsNone(storagee.get(int, objj.id))
+        with self.assertRaises(TypeError):
+            storagee.get(State, objj.id, 'op')
+        with self.assertRaises(TypeError):
+            storagee.get(State)
+        with self.assertRaises(TypeError):
+            storagee.get()
+
+    def test_count(self):
+        """testing that is to count the returns of the number of
+        objects thats of aa given class."""
+        storagee = models.storage
+        self.assertIs(type(storagee.count()), int)
+        self.assertIs(type(storagee.count(None)), int)
+        self.assertIs(type(storagee.count(int)), int)
+        self.assertIs(type(storagee.count(State)), int)
+        self.assertEqual(storagee.count(), storagee.count(None))
+        State(name='Lagos').save()
+        self.assertGreater(storagee.count(State), 0)
+        self.assertEqual(storagee.count(), storagee.count(None))
+        aa = storagee.count(State)
+        State(name='Enugu').save()
+        self.assertGreater(storagee.count(State), aa)
+        Amenity(name='Free WiFi').save()
+        self.assertGreater(storagee.count(), storagee.count(State))
+        with self.assertRaises(TypeError):
+            storagee.count(State, 'op')       

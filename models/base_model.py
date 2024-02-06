@@ -11,6 +11,8 @@ from sqlalchemy import Column, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 import uuid
 
+import inspect
+
 time = "%Y-%m-%dT%H:%M:%S.%f"
 
 if models.storage_t == "db":
@@ -68,8 +70,17 @@ class BaseModel:
         new_dict["__class__"] = self.__class__.__name__
         if "_sa_instance_state" in new_dict:
             del new_dict["_sa_instance_state"]
+        #task 14
+        framme = inspect.currentframe().f_back
+        funct_namme = framme.f_code.co_name
+        classes_name = ''
+        if 'self' in framme.f_locals:
+            classes_name = framme.f_locals["self"].__class__.__name__
+        is_the_fs_writing = funct_namme == 'save' and classes_name == 'FileStorage'
+        if 'password' in new_dict and not is_the_fs_writing:
+            del new_dict['password']
         return new_dict
 
     def delete(self):
         """delete the current instance from the storage"""
-        models.storage.delete(self)
+        models.storage.delete(self)      
